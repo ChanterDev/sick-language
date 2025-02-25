@@ -1,0 +1,5 @@
+D:\VisualProjects\sick-language\bin\Release\net9.0\publish\sick-language.exe
+D:\VisualProjects\sick-language\bin\Release\net9.0\publish\sick-language.dll
+D:\VisualProjects\sick-language\bin\Release\net9.0\publish\sick-language.deps.json
+D:\VisualProjects\sick-language\bin\Release\net9.0\publish\sick-language.runtimeconfig.json
+D:\VisualProjects\sick-language\bin\Release\net9.0\publish\sick-language.pdb

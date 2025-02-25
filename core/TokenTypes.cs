@@ -1,0 +1,33 @@
+namespace SickLanguage.Core {
+    public enum TokenType {
+        KEYWORD,
+        STRING,
+        NUMBER,
+        PLUS,
+        MINUS,
+        MULTIPLY,
+        DIVIDE,
+        EQUALS,
+        MORE,
+        LESS,
+        MORE_OR_EQUALS,
+        LESS_OR_EQUALS,
+        ASSIGN,
+        VARIABLE,
+        LPAREN,
+        RPAREN,
+        IF,
+        ELIF,
+        ELSE,
+        FOR,
+        WHILE,
+        BOOLEAN,
+        NOT,
+        COLON,
+        SEMICOLON,
+        COMMA,
+        PRINT,
+        EOF,
+        ANY
+    }
+}
