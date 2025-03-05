@@ -5,11 +5,13 @@ public class Sick {
     public static void Main(string[] args) {
         string content = File.ReadAllText(args[0]);
         Lexer lexer = new(content);
-        List<Token> tokens = lexer.tokenize();
+        List<Token> tokens = lexer.Tokenize();
+        foreach (Token token in tokens) {
+            Console.WriteLine(token);
+        }
         Parser parser = new(tokens);
-        StatementsNode node = parser.parse();
-        Interpreter interpreter = new(node);
-        interpreter.interpret();
+        CompoundStatement compound = parser.Parse();
+        compound.Execute();
     }
 }
 

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("sick-language")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+94223b7182f0f03d70e4e0a53cafde727277ddfe")]
 [assembly: System.Reflection.AssemblyProductAttribute("sick-language")]
 [assembly: System.Reflection.AssemblyTitleAttribute("sick-language")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

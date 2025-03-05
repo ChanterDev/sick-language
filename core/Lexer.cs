@@ -5,125 +5,214 @@ namespace SickLanguage.Core {
         private List<Token> tokens = [];
         private string code;
         private int position = 0;
-        private char? character;
-
+        private static string OPERATOR_CHARS = "+-*/(){}[]=><!.,:;";
 
         public Lexer(string code) {
             this.code = code;
-            character = code[position];
         }
 
-        private void nextCharacter() {
+        private char Peek(int relative_position) {
+            int position = this.position + relative_position;
+            if (position >= code.Length) return '\0';
+            return code[position];
+        }
+
+        private char Next() {
             position++;
-            try { character = code[position]; } catch (IndexOutOfRangeException) { character = null; }
+            return Peek(0);
         }
 
-        private void pushToken(Token token) {
-            tokens.Add(token);
-            nextCharacter();
-        }
+        private void AddToken(TokenType token_type, string value) => tokens.Add(new Token(token_type, value));
+        private void AddToken(TokenType token_type) => tokens.Add(new Token(token_type));
 
-        private string variableBuilder() {
-            StringBuilder builder = new();
-
-            nextCharacter();
-            while (character != null && char.IsLetterOrDigit((char) character)) {
-                builder.Append(character);
-                nextCharacter();
-            }
-            return builder.ToString();
-        }
-
-        private void keywordBuilder() {
-            StringBuilder builder = new();
-
-            while (character != null && char.IsLetterOrDigit((char) character)) {
-                builder.Append(character);
-                nextCharacter();
-            }
-            string result = builder.ToString();
-            if (result == "var") tokens.Add(new Token(TokenType.VARIABLE, variableBuilder()));
-            else if (result == "if") tokens.Add(new Token(TokenType.IF));
-            else if (result == "elif") tokens.Add(new Token(TokenType.ELIF));
-            else if (result == "else") tokens.Add(new Token(TokenType.ELSE));
-            else if (result == "for") tokens.Add(new Token(TokenType.FOR));
-            else if (result == "while") tokens.Add(new Token(TokenType.WHILE));
-            else if (result == "true") tokens.Add(new Token(TokenType.BOOLEAN, "true"));
-            else if (result == "false") tokens.Add(new Token(TokenType.BOOLEAN, "false"));
-            else if (result == "not") tokens.Add(new Token(TokenType.NOT));
-            else if (result == "print") tokens.Add(new Token(TokenType.PRINT));
-            else tokens.Add(new Token(TokenType.KEYWORD, result));
-        }
-
-        private string stringBuilder() {
-            StringBuilder builder = new();
-
-            nextCharacter();
-            while (character != null && character != '"') {
-                builder.Append(character);
-                nextCharacter();
-            }
-            nextCharacter();
-
-            return builder.ToString();
-        }
-
-        private string numberBuilder() {
-            StringBuilder builder = new();
-
-            while (character != null && char.IsDigit((char) character)) {
-                builder.Append(character);
-                nextCharacter();
+        private void TokenizeWord() {
+            StringBuilder buffer = new();
+            char current = Peek(0);
+            while (true) {
+                if (!char.IsLetterOrDigit(current)) break;
+                buffer.Append(current);
+                current = Next();
             }
 
-            return builder.ToString();
-        }
-
-        private void equalsAssignBuilder() {
-            nextCharacter();
-            if (character == '=') {
-                tokens.Add(new Token(TokenType.EQUALS));
-                nextCharacter();
-            } else tokens.Add(new Token(TokenType.ASSIGN));
-        }
-
-        private void moreEqualsBuilder() {
-            nextCharacter();
-            if (character == '=') {
-                tokens.Add(new Token(TokenType.MORE_OR_EQUALS));
-                nextCharacter();
-            } else tokens.Add(new Token(TokenType.MORE));
-        }
-
-        private void lessEqualsBuilder() {
-            nextCharacter();
-            if (character == '=') {
-                tokens.Add(new Token(TokenType.LESS_OR_EQUALS));
-                nextCharacter();
-            } else tokens.Add(new Token(TokenType.LESS));
-        }
-
-        public List<Token> tokenize() {
-            while (character != null) {
-                if (char.IsLetter((char) character)) keywordBuilder();
-                else if (char.IsDigit((char) character)) tokens.Add(new Token(TokenType.NUMBER, numberBuilder()));
-                else if (character == '"') tokens.Add(new Token(TokenType.STRING, stringBuilder()));
-                else if (character == '=') equalsAssignBuilder();
-                else if (character == '+') pushToken(new Token(TokenType.PLUS));
-                else if (character == '-') pushToken(new Token(TokenType.MINUS));
-                else if (character == '*') pushToken(new Token(TokenType.MULTIPLY));
-                else if (character == '/') pushToken(new Token(TokenType.DIVIDE));
-                else if (character == '>') moreEqualsBuilder();
-                else if (character == '<') lessEqualsBuilder();
-                else if (character == '(') pushToken(new Token(TokenType.LPAREN));
-                else if (character == ')') pushToken(new Token(TokenType.RPAREN));
-                else if (character == ':') pushToken(new Token(TokenType.COLON));
-                else if (character == ';') pushToken(new Token(TokenType.SEMICOLON));
-                else if (character == ',') pushToken(new Token(TokenType.COMMA));
-                else nextCharacter();
+            switch (buffer.ToString()) {
+                case "print":
+                    AddToken(TokenType.PRINT);
+                    break;
+                case "if":
+                    AddToken(TokenType.IF);
+                    break;
+                case "elif":
+                    AddToken(TokenType.ELIF);
+                    break;
+                case "else":
+                    AddToken(TokenType.ELSE);
+                    break;
+                case "for":
+                    AddToken(TokenType.FOR);
+                    break;
+                case "while":
+                    AddToken(TokenType.WHILE);
+                    break;
+                case "break":
+                    AddToken(TokenType.BREAK);
+                    break;
+                case "func":
+                    AddToken(TokenType.FUNCTION);
+                    break;
+                case "var":
+                    AddToken(TokenType.VARIABLE);
+                    break;
+                default:
+                    AddToken(TokenType.KEYWORD, buffer.ToString());
+                    break;
             }
+        }
 
-            //tokens.Add(new Token(TokenType.EOF));
+        private void TokenizeString() {
+            StringBuilder buffer = new();
+            char current = Next();
+            while (true) {
+                if (current == '\\') {
+                    current = Next();
+                    switch (current) {
+                        case '"':
+                            buffer.Append('"');
+                            continue;
+                        case 'n':
+                            buffer.Append('\n');
+                            continue;
+                        case 't':
+                            buffer.Append('\t');
+                            continue;
+                    }
+                    buffer.Append('\\');
+                    continue;
+                }
+                if (current == '"') break;
+                buffer.Append(current);
+                current = Next();
+            }
+            Next();
+
+            AddToken(TokenType.STRING, buffer.ToString());
+        }
+
+        private void TokenizeNumber() {
+            StringBuilder buffer = new();
+            char current = Peek(0);
+            while (true) {
+                if (!char.IsDigit(current)) break;
+                buffer.Append(current);
+                current = Next();
+            }
+            AddToken(TokenType.NUMBER, buffer.ToString());
+        }
+
+        private void TokenizeOperator() {
+            StringBuilder buffer = new();
+            char current = Peek(0);
+            while (true) {
+                switch (buffer.ToString() + current) {
+                    case "+":
+                        AddToken(TokenType.PLUS);
+                        Next();
+                        return;
+                    case "-":
+                        AddToken(TokenType.MINUS);
+                        Next();
+                        return;
+                    case "*":
+                        AddToken(TokenType.MULTIPLY);
+                        Next();
+                        return;
+                    case "/":
+                        AddToken(TokenType.DIVIDE);
+                        Next();
+                        return;
+                    case "=":
+                        AddToken(TokenType.ASSIGN);
+                        Next();
+                        return;
+                    case ":":
+                        AddToken(TokenType.COLON);
+                        Next();
+                        return;
+                    case ";":
+                        AddToken(TokenType.SEMICOLON);
+                        Next();
+                        return;
+                    case "(":
+                        AddToken(TokenType.LEFT_ROUND_BRACKET);
+                        Next();
+                        return;
+                    case ")":
+                        AddToken(TokenType.RIGHT_ROUND_BRACKET);
+                        Next();
+                        return;
+                    case "{":
+                        AddToken(TokenType.LEFT_CURLY_BRACKET);
+                        Next();
+                        return;
+                    case "}":
+                        AddToken(TokenType.RIGHT_CURLY_BRACKET);
+                        Next();
+                        return;
+                    case "[":
+                        AddToken(TokenType.LEFT_SQUARE_BRACKET);
+                        Next();
+                        return;
+                    case "]":
+                        AddToken(TokenType.RIGHT_SQUARE_BRACKET);
+                        Next();
+                        return;
+                    case "!":
+                        AddToken(TokenType.REJECT);
+                        Next();
+                        return;
+                    case "!=":
+                        AddToken(TokenType.REJECT_EQUALS);
+                        Next();
+                        return;
+                    case ">":
+                        AddToken(TokenType.GREATER);
+                        Next();
+                        return;
+                    case "<":
+                        AddToken(TokenType.LESS);
+                        Next();
+                        return;
+                    case ">=":
+                        AddToken(TokenType.GREATER_EQUALS);
+                        Next();
+                        return;
+                    case "<=":
+                        AddToken(TokenType.LESS_EQUALS);
+                        Next();
+                        return;
+                    case ".":
+                        AddToken(TokenType.DOT);
+                        Next();
+                        return;
+                    case ",":
+                        AddToken(TokenType.COMMA);
+                        Next();
+                        return;
+                }
+
+                buffer.Append(current);
+                current = Next();
+            }
+        }
+
+        public List<Token> Tokenize() {
+            while (position < code.Length) {
+                char current = Peek(0);
+                if (char.IsDigit(current)) TokenizeNumber();
+                else if (char.IsLetter(current)) TokenizeWord();
+                else if (current == '"') TokenizeString();
+                else if (OPERATOR_CHARS.Contains(current)) TokenizeOperator();
+                else Next();
+            }
 
             return tokens;
         }
